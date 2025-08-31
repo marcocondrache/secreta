@@ -1,0 +1,37 @@
+use std::process::ExitCode;
+
+use clap::{Parser, Subcommand};
+
+use crate::env::{PKG_NAME, PKG_RELEASE};
+
+mod run;
+
+#[derive(Debug, Parser)]
+#[command(name = PKG_NAME, bin_name = PKG_NAME)]
+#[command(version = PKG_RELEASE)]
+#[command(disable_version_flag = false, arg_required_else_help = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+    #[command(about = "Run a command and inject secrets")]
+    Run(run::RunCommandArguments),
+}
+
+pub async fn init() -> ExitCode {
+    let args = Cli::parse();
+
+    let output = match args.command {
+        Commands::Run(args) => run::init(args).await,
+    };
+
+    if let Err(error) = output {
+        eprintln!("Error: {}", error);
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
+}
