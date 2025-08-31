@@ -1,21 +1,21 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use url::Url;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
-    enviroments: HashMap<String, Environment>,
+    pub enviroments: HashMap<String, Environment>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Environment {
-    secrets: Vec<Secret>,
+    pub default: bool,
+    pub secrets: Vec<Secret>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Secret {
-    url: Url,
-    name: String,
-    matcher: Option<String>,
+    pub url: String,
+    pub name: String,
+    pub matcher: Option<String>,
 }

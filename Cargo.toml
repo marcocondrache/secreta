@@ -7,15 +7,17 @@ edition = "2024"
 members = ["crates/secreta-core"]
 
 [dependencies]
+secreta-core = { path = "crates/secreta-core" }
+
+leon = "3.0.2"
+
 anyhow = { workspace = true }
 serde_yml = { workspace = true }
-
 url = { workspace = true }
 clap = { workspace = true }
 secrecy = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
-leon = "3.0.2"
 either = { version = "1.15.0", features = ["serde"] }
 
 [workspace.dependencies]

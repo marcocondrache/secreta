@@ -1,5 +1,5 @@
-use secrecy::SecretString;
 use anyhow::Result;
+use secrecy::SecretString;
 use url::Url;
 
 pub trait Provider: Sized + Send + Sync {

@@ -564,6 +564,7 @@ dependencies = [
  "either",
  "leon",
  "secrecy",
+ "secreta-core",
  "serde",
  "serde_yml",
  "tokio",
