@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand};
 
 use crate::env::{PKG_NAME, PKG_RELEASE};
 
+mod read;
 mod run;
 
 #[derive(Debug, Parser)]
@@ -19,6 +20,9 @@ struct Cli {
 enum Commands {
     #[command(about = "Run a command and inject secrets")]
     Run(run::RunCommandArguments),
+
+    #[command(about = "Read a secret")]
+    Read(read::ReadCommandArguments),
 }
 
 pub async fn init() -> ExitCode {
@@ -26,6 +30,7 @@ pub async fn init() -> ExitCode {
 
     let output = match args.command {
         Commands::Run(args) => run::init(args).await,
+        Commands::Read(args) => read::init(args).await,
     };
 
     if let Err(error) = output {

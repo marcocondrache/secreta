@@ -2,13 +2,17 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use clap::Args;
-use secrecy::ExposeSecret;
-use tokio::process::Command;
+use secrecy::{ExposeSecret, SecretString};
+use tokio::{process::Command, task::JoinSet};
+use tracing::debug;
 
 use crate::{cnf, pvd};
 
 #[derive(Debug, Args)]
 pub struct RunCommandArguments {
+    #[arg(short, long, help = "The environment to use")]
+    environment: Option<String>,
+
     #[arg(trailing_var_arg = true)]
     command: Vec<String>,
 }
@@ -19,33 +23,47 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     }
 
     let config = cnf::extract().await?;
-    let secrets = config
+    let default_enviroment = config
         .enviroments
         .values()
         .find(|e| e.default)
-        .map(|e| e.secrets.clone())
-        .unwrap_or_else(|| vec![]);
+        .ok_or_else(|| anyhow::anyhow!("Default environment not found"))?;
 
-    let mut envs: HashMap<String, String> = HashMap::new();
-    for secret in secrets {
-        let mut provider = pvd::route(&secret.url)?;
-        let url = pvd::render(
-            &secret.url,
-            &config.enviroments.values().find(|e| e.default).unwrap(),
-        )
-        .await?;
+    let enviroment = match args.environment {
+        Some(environment) => config
+            .enviroments
+            .get(environment.as_str())
+            .ok_or_else(|| anyhow::anyhow!("Environment not found"))?,
+        None => default_enviroment,
+    };
 
-        let value = pvd::extract(&mut provider, &url).await?;
+    let mut set = JoinSet::new();
+    for secret in &enviroment.secrets {
+        set.spawn(async move {
+            let mut provider = pvd::route(&secret.url)?;
+            let url = pvd::render(&secret.url, enviroment).await?;
+            let value = pvd::extract(&mut provider, &url).await?;
 
-        envs.insert(secret.name, value.expose_secret().to_string());
+            Ok((secret.name.clone(), value))
+        });
     }
 
-    let _status = Command::new(args.command.remove(0))
+    let envs = set
+        .join_all()
+        .await
+        .into_iter()
+        .filter_map(|result: Result<(String, SecretString)>| result.ok())
+        .map(|(name, value)| (name, value.expose_secret().to_string()))
+        .collect::<HashMap<String, String>>();
+
+    let status = Command::new(args.command.remove(0))
         .args(args.command)
         .envs(envs)
         .kill_on_drop(true)
         .status()
         .await?;
+
+    debug!("Finished with status: {}", status);
 
     Ok(())
 }

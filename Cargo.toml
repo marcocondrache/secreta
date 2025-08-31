@@ -10,6 +10,7 @@ members = ["crates/secreta-core"]
 secreta-core = { path = "crates/secreta-core" }
 
 leon = "3.0.2"
+tracing = "0.1.41"
 
 anyhow = { workspace = true }
 serde_yml = { workspace = true }
