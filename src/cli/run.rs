@@ -37,7 +37,7 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     let mut set = JoinSet::new();
     for secret in &enviroment.secrets {
         set.spawn(async move {
-            let mut provider = pvd::route(&secret.url)?;
+            let mut provider = pvd::route(&secret.url).await?;
             let url = pvd::render(&secret.url, enviroment).await?;
             let value = pvd::extract(&mut provider, &url).await?;
 

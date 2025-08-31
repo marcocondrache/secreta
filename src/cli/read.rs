@@ -38,7 +38,7 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
         .find(|s| s.name == args.secret)
         .ok_or_else(|| anyhow::anyhow!("Secret not found"))?;
 
-    let mut provider = pvd::route(&secret.url)?;
+    let mut provider = pvd::route(&secret.url).await?;
     let url = pvd::render(&secret.url, enviroment).await?;
     let value = pvd::extract(&mut provider, &url).await?;
 
