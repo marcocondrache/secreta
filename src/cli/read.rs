@@ -18,6 +18,7 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
 
     let default_enviroment = config
         .enviroments
+        .0
         .values()
         .find(|e| e.default)
         .ok_or_else(|| anyhow::anyhow!("Default environment not found"))?;
@@ -25,6 +26,7 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
     let enviroment = match args.environment {
         Some(environment) => config
             .enviroments
+            .0
             .get(environment.as_str())
             .ok_or_else(|| anyhow::anyhow!("Environment not found"))?,
         None => default_enviroment,
