@@ -1341,7 +1341,6 @@ name = "secreta-kubernetes"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "base64",
  "k8s-openapi",
  "kube",
  "secrecy",

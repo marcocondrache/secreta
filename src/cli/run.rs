@@ -37,17 +37,16 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     let mut set = JoinSet::new();
     for secret in &enviroment.secrets {
         set.spawn(async move {
-            let mut provider = pvd::route(&secret.url).await?;
             let url = pvd::render(&secret.url, enviroment).await?;
+            let mut provider = pvd::route(&url.scheme()).await?;
             let value = pvd::extract(&mut provider, &url).await?;
 
             Ok((secret.name.clone(), value))
         });
     }
 
-    let envs = set
-        .join_all()
-        .await
+    let results = set.join_all().await;
+    let envs = results
         .into_iter()
         .filter_map(|result: Result<(String, SecretString)>| result.ok())
         .map(|(name, value)| (name, value.expose_secret().to_string()))

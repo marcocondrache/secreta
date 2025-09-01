@@ -1,19 +1,18 @@
-use base64::prelude::*;
-
 use anyhow::Result;
 use k8s_openapi::api::core::v1::Secret;
+use kube::Api;
 use secrecy::SecretString;
 use secreta_core::provider::Provider;
 use url::Url;
 
 pub struct KubernetesProvider {
-    api: kube::Api<Secret>,
+    client: kube::Client,
 }
 
 impl Provider for KubernetesProvider {
     async fn new() -> Result<Self> {
         Ok(Self {
-            api: kube::Api::all(kube::Client::try_default().await?),
+            client: kube::Client::try_default().await?,
         })
     }
 
@@ -22,6 +21,10 @@ impl Provider for KubernetesProvider {
         // let namespace = resource
         //     .host_str()
         //     .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
+
+        // TODO: This is not optimal
+        let api: Api<Secret> =
+            kube::Api::namespaced(self.client.clone(), resource.host_str().unwrap());
 
         let secret_name = resource
             .path_segments()
@@ -35,7 +38,7 @@ impl Provider for KubernetesProvider {
             .nth(1)
             .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
 
-        let secret = self.api.get(secret_name).await?;
+        let secret = api.get(secret_name).await?;
         let secret_content = secret
             .data
             .ok_or_else(|| anyhow::anyhow!("Secret data not found"))?;
@@ -45,9 +48,8 @@ impl Provider for KubernetesProvider {
             .ok_or_else(|| anyhow::anyhow!("Secret key not found"))?
             .to_owned();
 
-        let decoded = BASE64_STANDARD.decode(secret_data.0)?;
-        let secret_data = std::str::from_utf8(decoded.as_slice())?;
+        let secret_data = String::from_utf8_lossy(&secret_data.0);
 
-        Ok(SecretString::from(secret_data))
+        Ok(SecretString::from(secret_data.to_string()))
     }
 }
