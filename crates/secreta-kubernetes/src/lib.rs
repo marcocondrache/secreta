@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use k8s_openapi::api::core::v1::Secret;
 use kube::Api;
 use secrecy::SecretString;
@@ -18,25 +18,25 @@ impl Provider for KubernetesProvider {
 
     // kubernetes://<namespace>/<secret-name>/<secret-key>
     async fn read(&mut self, resource: &Url) -> Result<SecretString> {
-        // let namespace = resource
-        //     .host_str()
-        //     .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
+        let namespace = resource
+            .host_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
 
         // TODO: This is not optimal
-        let api: Api<Secret> =
-            kube::Api::namespaced(self.client.clone(), resource.host_str().unwrap());
+        let api: Api<Secret> = kube::Api::namespaced(self.client.clone(), namespace);
 
-        let secret_name = resource
+        let segments = resource
             .path_segments()
-            .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?
+            .context("Missing secret name or key")?;
+
+        let mut segments = segments;
+        let secret_name = segments
             .next()
-            .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing secret name"))?;
 
-        let secret_key = resource
-            .path_segments()
-            .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?
-            .nth(1)
-            .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
+        let secret_key = segments
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("Missing secret key"))?;
 
         let secret = api.get(secret_name).await?;
         let secret_content = secret
@@ -45,8 +45,7 @@ impl Provider for KubernetesProvider {
 
         let secret_data = secret_content
             .get(secret_key)
-            .ok_or_else(|| anyhow::anyhow!("Secret key not found"))?
-            .to_owned();
+            .ok_or_else(|| anyhow::anyhow!("Secret key not found"))?;
 
         let secret_data = String::from_utf8_lossy(&secret_data.0);
 
