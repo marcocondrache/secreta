@@ -29,6 +29,7 @@ impl TryFrom<HashMap<String, Environment>> for Enviroments {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Environment {
+    #[serde(default)]
     pub default: bool,
     pub secrets: Vec<Secret>,
 }
