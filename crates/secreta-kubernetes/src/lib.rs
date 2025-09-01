@@ -17,7 +17,7 @@ impl Provider for KubernetesProvider {
     }
 
     // kubernetes://<namespace>/<secret-name>/<secret-key>
-    async fn read(&mut self, resource: &Url) -> Result<SecretString> {
+    async fn read(&self, resource: &Url) -> Result<SecretString> {
         let namespace = resource.host_str().context("Invalid resource")?;
 
         // TODO: This is not optimal

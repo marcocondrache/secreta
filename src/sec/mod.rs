@@ -18,8 +18,8 @@ pub fn render(raw_resource: &str, environment: &str) -> Result<Url> {
 
 pub async fn fetch(secret: &Secret, environment: &Environment) -> Result<SecretString> {
     let url = render(&secret.url, &environment.name)?;
-    let mut provider = pvd::route(url.scheme()).await?;
-    let value = pvd::extract(&mut provider, &url).await?;
+    let provider = pvd::route(url.scheme()).await?;
+    let value = pvd::extract(&provider, &url).await?;
 
     Ok(value)
 }

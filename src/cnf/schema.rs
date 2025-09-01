@@ -22,6 +22,8 @@ pub struct Environment {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Secret {
     pub url: String,
+    #[serde(default)]
+    pub optional: bool,
     // TODO: Uncomment this once we have a way to handle matching
     // pub matcher: Option<String>,
 }

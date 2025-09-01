@@ -44,6 +44,7 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     }
 
     let results = set.join_all().await;
+    // TODO: handle optional secrets
     let envs = results
         .into_iter()
         .filter_map(|result: Result<(String, SecretString)>| result.ok())

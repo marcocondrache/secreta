@@ -4,6 +4,7 @@ use secreta_core::provider::Provider;
 use secreta_kubernetes::KubernetesProvider;
 use url::Url;
 
+// TODO: Avoid creating a new provider for each request
 pub async fn route(schema: &str) -> Result<impl Provider> {
     match schema {
         "kubernetes" => KubernetesProvider::new().await,
@@ -14,6 +15,9 @@ pub async fn route(schema: &str) -> Result<impl Provider> {
     }
 }
 
-pub async fn extract(provider: &mut impl Provider, resource: &Url) -> Result<SecretString> {
+pub async fn extract<P>(provider: &P, resource: &Url) -> Result<SecretString>
+where
+    P: Provider,
+{
     provider.read(resource).await
 }

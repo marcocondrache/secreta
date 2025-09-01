@@ -5,5 +5,5 @@ use url::Url;
 pub trait Provider: Sized + Send {
     fn new() -> impl Future<Output = Result<Self>> + Send;
 
-    fn read(&mut self, resource: &Url) -> impl Future<Output = Result<SecretString>> + Send;
+    fn read(&self, resource: &Url) -> impl Future<Output = Result<SecretString>> + Send;
 }
