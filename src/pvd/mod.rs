@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use secrecy::SecretString;
 use secreta_core::provider::Provider;

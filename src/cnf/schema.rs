@@ -22,7 +22,8 @@ pub struct Environment {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Secret {
     pub url: String,
-    pub matcher: Option<String>,
+    // TODO: Uncomment this once we have a way to handle matching
+    // pub matcher: Option<String>,
 }
 
 impl Config {
@@ -37,21 +38,10 @@ impl Config {
     pub fn get_environment(&self, name: &str) -> Option<&Environment> {
         self.environments.iter().find(|env| env.name == name)
     }
-
-    pub fn list_environments(&self) -> Vec<&str> {
-        self.environments
-            .iter()
-            .map(|env| env.name.as_str())
-            .collect()
-    }
 }
 
 impl Environment {
     pub fn get_secret(&self, name: &str) -> Option<&Secret> {
         self.secrets.get(name)
-    }
-
-    pub fn list_secrets(&self) -> Vec<&str> {
-        self.secrets.keys().map(|k| k.as_str()).collect()
     }
 }

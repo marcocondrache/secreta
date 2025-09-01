@@ -1,6 +1,7 @@
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
+use tracing::error;
 
 use crate::env::{PKG_NAME, PKG_RELEASE};
 
@@ -18,7 +19,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    #[command(about = "Run a command and inject secrets")]
+    #[command(about = "Run a program and inject secrets")]
     Run(run::RunCommandArguments),
 
     #[command(about = "Read a secret")]
@@ -34,7 +35,8 @@ pub async fn init() -> ExitCode {
     };
 
     if let Err(error) = output {
-        eprintln!("Error: {}", error);
+        error!("Error: {error}");
+
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
