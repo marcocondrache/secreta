@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap::Args;
 use secrecy::ExposeSecret;
 
-use crate::{cnf, pvd};
+use crate::{cnf, pvd, sec};
 
 #[derive(Debug, Args)]
 pub struct ReadCommandArguments {
@@ -31,7 +31,7 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
         .get_secret(args.secret.as_str())
         .context("Secret not found")?;
 
-    let url = pvd::render(&secret.url, &environment.name).await?;
+    let url = sec::render(&secret.url, &environment.name).await?;
     let mut provider = pvd::route(&url.scheme()).await?;
     let value = pvd::extract(&mut provider, &url).await?;
 

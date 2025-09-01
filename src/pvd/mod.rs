@@ -16,16 +16,6 @@ pub async fn route(schema: &str) -> Result<impl Provider> {
     }
 }
 
-pub async fn render(raw_resource: &str, environment: &str) -> Result<Url> {
-    let values: HashMap<String, String> =
-        HashMap::from([("environment".to_string(), environment.to_string())]);
-
-    let template = leon::Template::parse(raw_resource)?;
-    let resource = template.render(&values)?;
-
-    Ok(Url::parse(&resource)?)
-}
-
 pub async fn extract(provider: &mut impl Provider, resource: &Url) -> Result<SecretString> {
     provider.read(resource).await
 }

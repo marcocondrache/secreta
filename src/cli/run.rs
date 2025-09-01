@@ -6,7 +6,7 @@ use secrecy::{ExposeSecret, SecretString};
 use tokio::{process::Command, task::JoinSet};
 use tracing::debug;
 
-use crate::{cnf, pvd};
+use crate::{cnf, sec};
 
 #[derive(Debug, Args)]
 pub struct RunCommandArguments {
@@ -22,6 +22,9 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
         return Err(anyhow::anyhow!("No command provided"));
     }
 
+    let program = args.command.remove(0);
+    let program_args = args.command;
+
     let config = cnf::extract().await?;
     let default_environment = config
         .get_default_environment()
@@ -35,14 +38,9 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     };
 
     let mut set = JoinSet::new();
-    for (name, secret) in &environment.secrets {
-        set.spawn(async move {
-            let url = pvd::render(&secret.url, &environment.name.as_str()).await?;
-            let mut provider = pvd::route(&url.scheme()).await?;
-            let value = pvd::extract(&mut provider, &url).await?;
 
-            Ok((name.clone(), value))
-        });
+    for (name, secret) in &environment.secrets {
+        set.spawn(async move { Ok((name.clone(), sec::fetch(secret, environment).await?)) });
     }
 
     let results = set.join_all().await;
@@ -52,8 +50,8 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
         .map(|(name, value)| (name, value.expose_secret().to_string()))
         .collect::<HashMap<String, String>>();
 
-    let status = Command::new(args.command.remove(0))
-        .args(args.command)
+    let status = Command::new(program)
+        .args(program_args)
         .envs(envs)
         .kill_on_drop(true)
         .status()
