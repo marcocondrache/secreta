@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use secrecy::{ExposeSecret, SecretString};
 use tokio::{process::Command, task::JoinSet};
@@ -23,28 +23,25 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     }
 
     let config = cnf::extract().await?;
-    let default_enviroment = config
-        .enviroments
-        .values()
-        .find(|e| e.default)
-        .ok_or_else(|| anyhow::anyhow!("Default environment not found"))?;
+    let default_environment = config
+        .get_default_environment()
+        .context("Default environment not found")?;
 
-    let enviroment = match args.environment {
+    let environment = match args.environment {
         Some(environment) => config
-            .enviroments
-            .get(environment.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Environment not found"))?,
-        None => default_enviroment,
+            .get_environment(environment.as_str())
+            .context("Environment not found")?,
+        None => default_environment,
     };
 
     let mut set = JoinSet::new();
-    for secret in &enviroment.secrets {
+    for (name, secret) in &environment.secrets {
         set.spawn(async move {
-            let url = pvd::render(&secret.url, enviroment).await?;
+            let url = pvd::render(&secret.url, &environment.name.as_str()).await?;
             let mut provider = pvd::route(&url.scheme()).await?;
             let value = pvd::extract(&mut provider, &url).await?;
 
-            Ok((secret.name.clone(), value))
+            Ok((name.clone(), value))
         });
     }
 

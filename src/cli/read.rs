@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use secrecy::ExposeSecret;
 
@@ -16,27 +16,22 @@ pub struct ReadCommandArguments {
 pub async fn init(args: ReadCommandArguments) -> Result<()> {
     let config = cnf::extract().await?;
 
-    let default_enviroment = config
-        .enviroments
-        .values()
-        .find(|e| e.default)
-        .ok_or_else(|| anyhow::anyhow!("Default environment not found"))?;
+    let default_environment = config
+        .get_default_environment()
+        .context("Default environment not found")?;
 
-    let enviroment = match args.environment {
+    let environment = match args.environment {
         Some(environment) => config
-            .enviroments
-            .get(environment.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Environment not found"))?,
-        None => default_enviroment,
+            .get_environment(environment.as_str())
+            .context("Environment not found")?,
+        None => default_environment,
     };
 
-    let secret = enviroment
-        .secrets
-        .iter()
-        .find(|s| s.name == args.secret)
-        .ok_or_else(|| anyhow::anyhow!("Secret not found"))?;
+    let secret = environment
+        .get_secret(args.secret.as_str())
+        .context("Secret not found")?;
 
-    let url = pvd::render(&secret.url, enviroment).await?;
+    let url = pvd::render(&secret.url, &environment.name).await?;
     let mut provider = pvd::route(&url.scheme()).await?;
     let value = pvd::extract(&mut provider, &url).await?;
 

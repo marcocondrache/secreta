@@ -18,9 +18,7 @@ impl Provider for KubernetesProvider {
 
     // kubernetes://<namespace>/<secret-name>/<secret-key>
     async fn read(&mut self, resource: &Url) -> Result<SecretString> {
-        let namespace = resource
-            .host_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid resource"))?;
+        let namespace = resource.host_str().context("Invalid resource")?;
 
         // TODO: This is not optimal
         let api: Api<Secret> = kube::Api::namespaced(self.client.clone(), namespace);
@@ -30,22 +28,16 @@ impl Provider for KubernetesProvider {
             .context("Missing secret name or key")?;
 
         let mut segments = segments;
-        let secret_name = segments
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("Missing secret name"))?;
 
-        let secret_key = segments
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("Missing secret key"))?;
+        let secret_name = segments.next().context("Missing secret name")?;
+        let secret_key = segments.next().context("Missing secret key")?;
 
         let secret = api.get(secret_name).await?;
-        let secret_content = secret
-            .data
-            .ok_or_else(|| anyhow::anyhow!("Secret data not found"))?;
+        let secret_content = secret.data.context("Secret data not found")?;
 
         let secret_data = secret_content
             .get(secret_key)
-            .ok_or_else(|| anyhow::anyhow!("Secret key not found"))?;
+            .context("Secret key not found")?;
 
         let secret_data = String::from_utf8_lossy(&secret_data.0);
 

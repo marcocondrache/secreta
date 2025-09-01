@@ -6,8 +6,6 @@ use secreta_core::provider::Provider;
 use secreta_kubernetes::KubernetesProvider;
 use url::Url;
 
-use crate::cnf::schema::Environment;
-
 pub async fn route(schema: &str) -> Result<impl Provider> {
     match schema {
         "kubernetes" => KubernetesProvider::new().await,
@@ -18,11 +16,12 @@ pub async fn route(schema: &str) -> Result<impl Provider> {
     }
 }
 
-pub async fn render(raw_resource: &str, _enviroment: &Environment) -> Result<Url> {
-    let tmp: HashMap<String, String> = HashMap::new();
+pub async fn render(raw_resource: &str, enviroment: &str) -> Result<Url> {
+    let values: HashMap<String, String> =
+        HashMap::from([("enviroment".to_string(), enviroment.to_string())]);
 
     let template = leon::Template::parse(raw_resource)?;
-    let resource = template.render(&tmp)?;
+    let resource = template.render(&values)?;
 
     Ok(Url::parse(&resource)?)
 }

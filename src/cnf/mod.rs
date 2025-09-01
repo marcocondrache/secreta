@@ -1,7 +1,7 @@
 use std::env;
 
-use tokio::sync::OnceCell;
 use anyhow::Result;
+use tokio::sync::OnceCell;
 
 pub mod schema;
 
