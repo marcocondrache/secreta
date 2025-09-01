@@ -18,7 +18,6 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
 
     let default_enviroment = config
         .enviroments
-        .0
         .values()
         .find(|e| e.default)
         .ok_or_else(|| anyhow::anyhow!("Default environment not found"))?;
@@ -26,7 +25,6 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
     let enviroment = match args.environment {
         Some(environment) => config
             .enviroments
-            .0
             .get(environment.as_str())
             .ok_or_else(|| anyhow::anyhow!("Environment not found"))?,
         None => default_enviroment,
@@ -38,8 +36,8 @@ pub async fn init(args: ReadCommandArguments) -> Result<()> {
         .find(|s| s.name == args.secret)
         .ok_or_else(|| anyhow::anyhow!("Secret not found"))?;
 
-    let mut provider = pvd::route(&secret.url).await?;
     let url = pvd::render(&secret.url, enviroment).await?;
+    let mut provider = pvd::route(&url.scheme()).await?;
     let value = pvd::extract(&mut provider, &url).await?;
 
     println!("{}", value.expose_secret());

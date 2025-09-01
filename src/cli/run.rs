@@ -23,12 +23,15 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     }
 
     let config = cnf::extract().await?;
-    let default_enviroment = &config.enviroments.1;
+    let default_enviroment = config
+        .enviroments
+        .values()
+        .find(|e| e.default)
+        .ok_or_else(|| anyhow::anyhow!("Default environment not found"))?;
 
     let enviroment = match args.environment {
         Some(environment) => config
             .enviroments
-            .0
             .get(environment.as_str())
             .ok_or_else(|| anyhow::anyhow!("Environment not found"))?,
         None => default_enviroment,
