@@ -16,9 +16,9 @@ pub async fn route(schema: &str) -> Result<impl Provider> {
     }
 }
 
-pub async fn render(raw_resource: &str, enviroment: &str) -> Result<Url> {
+pub async fn render(raw_resource: &str, environment: &str) -> Result<Url> {
     let values: HashMap<String, String> =
-        HashMap::from([("enviroment".to_string(), enviroment.to_string())]);
+        HashMap::from([("environment".to_string(), environment.to_string())]);
 
     let template = leon::Template::parse(raw_resource)?;
     let resource = template.render(&values)?;
