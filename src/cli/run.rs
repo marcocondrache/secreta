@@ -18,7 +18,7 @@ pub struct RunCommandArguments {
 
 pub async fn init(mut args: RunCommandArguments) -> Result<()> {
     if args.command.is_empty() {
-        return Err(anyhow::anyhow!("No command provided"));
+        anyhow::bail!("No command provided");
     }
 
     let program = args.command.remove(0);

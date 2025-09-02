@@ -4,11 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["crates/secreta-core", "crates/secreta-kubernetes"]
+members = [
+    "crates/secreta-azure-vault",
+    "crates/secreta-core",
+    "crates/secreta-kubernetes",
+]
 
 [dependencies]
 secreta-core = { workspace = true }
 secreta-kubernetes = { path = "crates/secreta-kubernetes", optional = true }
+secreta-azure-vault = { path = "crates/secreta-azure-vault", optional = true }
 
 leon = "3.0.2"
 
@@ -36,3 +41,4 @@ tokio = { version = "1.47.1", features = ["full"] }
 [features]
 default = ["kubernetes"]
 kubernetes = ["secreta-kubernetes"]
+azure-vault = ["secreta-azure-vault"]
