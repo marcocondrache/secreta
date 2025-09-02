@@ -11,7 +11,6 @@ secreta-core = { workspace = true }
 secreta-kubernetes = { path = "crates/secreta-kubernetes", optional = true }
 
 leon = "3.0.2"
-tracing = "0.1.41"
 
 anyhow = { workspace = true }
 serde_yml = { workspace = true }

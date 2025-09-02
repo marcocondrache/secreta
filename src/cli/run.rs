@@ -4,7 +4,6 @@ use anyhow::{Context, Result};
 use clap::Args;
 use secrecy::{ExposeSecret, SecretString};
 use tokio::{process::Command, task::JoinSet};
-use tracing::debug;
 
 use crate::{cnf, sec};
 
@@ -51,14 +50,12 @@ pub async fn init(mut args: RunCommandArguments) -> Result<()> {
         .map(|(name, value)| (name, value.expose_secret().to_string()))
         .collect::<HashMap<String, String>>();
 
-    let status = Command::new(program)
+    let _ = Command::new(program)
         .args(program_args)
         .envs(envs)
         .kill_on_drop(true)
         .status()
         .await?;
-
-    debug!("Finished with status: {}", status);
 
     Ok(())
 }

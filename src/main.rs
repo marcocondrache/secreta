@@ -8,5 +8,12 @@ mod sec;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    cli::init().await
+    match cli::init().await {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("secreta: {e:?}");
+
+            ExitCode::FAILURE
+        }
+    }
 }

@@ -1,7 +1,5 @@
-use std::process::ExitCode;
-
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-use tracing::error;
 
 use crate::env::{PKG_NAME, PKG_RELEASE};
 
@@ -26,19 +24,11 @@ enum Commands {
     Read(read::ReadCommandArguments),
 }
 
-pub async fn init() -> ExitCode {
+pub async fn init() -> Result<()> {
     let args = Cli::parse();
 
-    let output = match args.command {
+    match args.command {
         Commands::Run(args) => run::init(args).await,
         Commands::Read(args) => read::init(args).await,
-    };
-
-    if let Err(error) = output {
-        error!("Error: {error}");
-
-        ExitCode::FAILURE
-    } else {
-        ExitCode::SUCCESS
     }
 }
